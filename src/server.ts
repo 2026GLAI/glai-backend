@@ -1,24 +1,55 @@
 import express from "express";
+import {
+  initializeSession,
+  processInput,
+  SessionState,
+} from "./stateEngine.js";
 
 const app = express();
 const PORT = 3000;
 
+app.use(express.json());
+
+/**
+ * In-memory session store.
+ * This is acceptable for v1.
+ * Persistence is explicitly out of scope.
+ */
+const sessions = new Map<string, SessionState>();
+
 /**
  * Health check.
- * This endpoint exists only to verify that the server is running.
- * It has no behavioral meaning.
  */
 app.get("/health", (_req, res) => {
   res.status(200).send("OK");
 });
 
 /**
- * Placeholder for /interact endpoint.
- * Behavior is not implemented yet.
+ * Core interaction endpoint.
+ * Wires HTTP to the state engine without adding logic.
  */
-app.post("/interact", (_req, res) => {
-  res.status(501).json({
-    error: "Not implemented",
+app.post("/interact", (req, res) => {
+  const { session_id, user_input } = req.body ?? {};
+
+  if (typeof session_id !== "string" || typeof user_input !== "string") {
+    return res.status(400).json({
+      error: "Invalid request",
+    });
+  }
+
+  let session = sessions.get(session_id);
+
+  if (!session) {
+    session = initializeSession(session_id);
+    sessions.set(session_id, session);
+  }
+
+  const result = processInput(session, user_input);
+
+  return res.status(200).json({
+    session_id: session.sessionId,
+    current_state: result.state,
+    response_text: result.responseText,
   });
 });
 
