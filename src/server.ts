@@ -14,9 +14,7 @@ app.post("/interact", (req, res) => {
   const { sessionId, input } = req.body ?? {};
 
   if (!sessionId || typeof input !== "string") {
-    res.status(400).json({
-      error: "INVALID_REQUEST"
-    });
+    res.status(400).json({ error: "INVALID_REQUEST" });
     return;
   }
 
@@ -37,8 +35,6 @@ app.post("/interact", (req, res) => {
   });
 });
 
-const PORT = 3000;
-
-app.listen(PORT, () => {
-  console.log(`GLAi backend v1 listening on port ${PORT}`);
+app.listen(3000, () => {
+  console.log("GLAi backend v1 listening on port 3000");
 });
