@@ -1,53 +1,43 @@
 import express from "express";
 import { initializeSession, processInput } from "./stateEngine.ts";
-import type { SessionState } from "./stateEngine.ts";
 
 const app = express();
-const PORT = 3000;
-
 app.use(express.json());
 
-/**
- * In-memory session store.
- * Acceptable for v1. Persistence is out of scope.
- */
-const sessions = new Map<string, SessionState>();
+const sessions = new Map<string, any>();
 
-/**
- * Health check endpoint.
- */
 app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
+  res.json({ status: "OK" });
 });
 
-/**
- * Core interaction endpoint.
- * Pure wiring: HTTP → state engine.
- */
 app.post("/interact", (req, res) => {
-  const { session_id, user_input } = req.body ?? {};
+  const { sessionId, input } = req.body ?? {};
 
-  if (typeof session_id !== "string" || typeof user_input !== "string") {
-    return res.status(400).json({
-      error: "Invalid request",
+  if (!sessionId || typeof input !== "string") {
+    res.status(400).json({
+      error: "INVALID_REQUEST"
     });
+    return;
   }
 
-  let session = sessions.get(session_id);
+  let session = sessions.get(sessionId);
 
   if (!session) {
-    session = initializeSession(session_id);
-    sessions.set(session_id, session);
+    session = initializeSession(sessionId);
+    sessions.set(sessionId, session);
   }
 
-  const result = processInput(session, user_input);
+  const result = processInput(session, input);
+  sessions.set(sessionId, result.session);
 
-  return res.status(200).json({
-    session_id: session.sessionId,
-    current_state: result.state,
-    response_text: result.responseText,
+  res.json({
+    sessionId,
+    state: result.session.state,
+    response: result.response
   });
 });
+
+const PORT = 3000;
 
 app.listen(PORT, () => {
   console.log(`GLAi backend v1 listening on port ${PORT}`);
