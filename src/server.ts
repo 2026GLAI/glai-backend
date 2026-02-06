@@ -3,12 +3,12 @@ import { initializeSession, processInput } from "./stateEngine.js";
 
 const app = express();
 
-// === CORS (WEB / PWA) ===
-app.use((_req: Request, res: Response, next) => {
+// === CORS ===
+app.use((req: Request, res: Response, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (_req.method === "OPTIONS") {
+  if (req.method === "OPTIONS") {
     res.sendStatus(200);
     return;
   }
