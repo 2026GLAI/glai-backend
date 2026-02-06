@@ -1,9 +1,6 @@
 import express from "express";
-import {
-  initializeSession,
-  processInput,
-  SessionState,
-} from "./stateEngine.js";
+import { initializeSession, processInput } from "./stateEngine.ts";
+import type { SessionState } from "./stateEngine.ts";
 
 const app = express();
 const PORT = 3000;
@@ -12,13 +9,12 @@ app.use(express.json());
 
 /**
  * In-memory session store.
- * This is acceptable for v1.
- * Persistence is explicitly out of scope.
+ * Acceptable for v1. Persistence is out of scope.
  */
 const sessions = new Map<string, SessionState>();
 
 /**
- * Health check.
+ * Health check endpoint.
  */
 app.get("/health", (_req, res) => {
   res.status(200).send("OK");
@@ -26,7 +22,7 @@ app.get("/health", (_req, res) => {
 
 /**
  * Core interaction endpoint.
- * Wires HTTP to the state engine without adding logic.
+ * Pure wiring: HTTP → state engine.
  */
 app.post("/interact", (req, res) => {
   const { session_id, user_input } = req.body ?? {};
