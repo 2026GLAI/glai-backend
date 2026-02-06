@@ -1,4 +1,4 @@
-export type SystemState = "INIT" | "ACTIVE" | "STOPPED";
+export type SystemState = "INIT" | "ACTIVE" | "UNCERTAINTY" | "STOPPED";
 
 export interface SessionState {
   id: string;
@@ -19,13 +19,57 @@ export function initializeSession(id: string): SessionState {
 
 export function processInput(
   session: SessionState,
-  _input: string
+  input: string
 ): StateEngineResult {
-  return {
-    session: {
-      ...session,
-      state: "ACTIVE"
-    },
-    response: "OK"
-  };
+  if (session.state === "STOPPED") {
+    return {
+      session,
+      response: "SESSION_STOPPED"
+    };
+  }
+
+  if (typeof input !== "string" || input.trim() === "") {
+    return {
+      session: {
+        ...session,
+        state: "UNCERTAINTY"
+      },
+      response: "UNCERTAIN_INPUT"
+    };
+  }
+
+  switch (session.state) {
+    case "INIT":
+      return {
+        session: {
+          ...session,
+          state: "ACTIVE"
+        },
+        response: "OK"
+      };
+
+    case "ACTIVE":
+      return {
+        session,
+        response: "OK"
+      };
+
+    case "UNCERTAINTY":
+      return {
+        session: {
+          ...session,
+          state: "ACTIVE"
+        },
+        response: "OK"
+      };
+
+    default:
+      return {
+        session: {
+          ...session,
+          state: "UNCERTAINTY"
+        },
+        response: "UNCERTAIN_STATE"
+      };
+  }
 }
